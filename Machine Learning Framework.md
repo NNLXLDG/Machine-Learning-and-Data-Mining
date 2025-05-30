@@ -515,20 +515,95 @@ KNN算法的核心思想是在一个含未知样本的空间，可以根据样�
 
 
 
+## 8. SVM 支持向量机
+
+### 8.1 支持向量分类器 (Support Vector Classifier or  SVC)
+
+#### 8.1.1 最优分类超平面
+- **目标**：在两类线性可分数据中寻找间隔最大的超平面  
+  $$\min \frac{1}{2} \| \mathbf{w} \|^2 \quad \text{s.t.} \quad y_i (\mathbf{w}^T \mathbf{x}_i + b) \geq 1$$
+- **支持向量**：位于间隔边界上的样本点（决定超平面位置）
+- **决策函数**：$f(\mathbf{x}) = \text{sgn} \left( \sum_{i} \lambda_i y_i \mathbf{x}_i^T \mathbf{x} + b \right)$
 
 
 
+#### 8.1.2 软间隔与松弛变量
+- **核心问题**：处理线性不可分数据（类间重叠）
+- **松弛变量 $\xi_i$**：允许分类错误  
+  $$\min \frac{1}{2} \| \mathbf{w} \|^2 + C \sum_{i=1}^N \xi_i \quad \text{s.t.} \quad y_i (\mathbf{w}^T \mathbf{x}_i + b) \geq 1 - \xi_i, \quad \xi_i \geq 0$$
+- **参数 $C$**：平衡间隔最大化与分类错误惩罚  
+  - $C \to \infty$：严格分类 → 可能导致过拟合  
+  - $C \to 0$：容忍错误 → 模型简单但可能欠拟合
 
 
 
+#### 8.1.3 拉格朗日对偶问题
+- **原始问题 → 对偶形式**：  
+  $$\max_{\lambda} \sum_{i=1}^N \lambda_i - \frac{1}{2} \sum_{i,j} \lambda_i \lambda_j y_i y_j \mathbf{x}_i^T \mathbf{x}_j$$  
+  $$\text{s.t.} \quad \sum_{i} \lambda_i y_i = 0, \quad 0 \leq \lambda_i \leq C$$
+- **KKT条件**：$\lambda_i [y_i (\mathbf{w}^T \mathbf{x}_i + b) - 1 + \xi_i] = 0$
+- **支持向量判定**：$\lambda_i > 0$ 的样本为支持向量
+
+---
+
+### 8.2 支持向量机与核方法 (SVM with Kernels)
+
+#### 8.2.1 核技巧原理
+- **核心思想**：将数据映射到高维空间实现线性可分  
+  $$\mathbf{x} \to \phi(\mathbf{x}) \quad \Rightarrow \quad \text{决策函数：} f(\mathbf{x}) = \text{sgn} \left( \sum \lambda_i y_i \color{red}{K(\mathbf{x}_i, \mathbf{x})} + b \right)$$
+- **核函数 $K(\mathbf{x}_i, \mathbf{x}_j) = \phi(\mathbf{x}_i)^T \phi(\mathbf{x}_j)$**：避免显式计算 $\phi(\mathbf{x})$
+- **常用核函数**：  
+  | 核函数类型       | 公式                          | 特点                     |
+  |------------------|-------------------------------|--------------------------|
+  | 线性核           | $K(\mathbf{x}_i, \mathbf{x}_j) = \mathbf{x}_i^T \mathbf{x}_j$ | 无参数，适用于线性可分   |
+  | 多项式核         | $(1 + \mathbf{x}_i^T \mathbf{x}_j)^d$      | $d$ 控制复杂度           |
+  | 高斯核 (RBF)     | $\exp(-\gamma \| \mathbf{x}_i - \mathbf{x}_j \|^2)$ | $\gamma$ 控制样本影响范围 |
+
+####  8.2.2 SVM的惩罚函数视角
+- **等价优化问题**：  
+  $$\min \sum_{i=1}^N [1 - y_i f(\mathbf{x}_i)]_+ + \frac{\lambda}{2} \| \mathbf{w} \|^2$$
+  - $[z]_+ = \max(0, z)$：合页损失（Hinge Loss）
+  - 本质：L2正则化 + 分类边界惩罚
+
+#### 8.2.3 维度灾难与泛化能力
+- **优势**：通过核函数在高维隐空间操作 → 避免维度灾难
+- **实验结论**：SVM在高维数据中比KNN更抗过拟合（见图：Test Error Curves）
+
+---
+
+### 8.3 支持向量回归 (SVM for Regression)
+#### 8.3.1 $\epsilon$-不敏感损失函数
+- **核心思想**：构造宽度为 $2\epsilon$ 的间隔带包容数据  
+  $$\min \frac{1}{2} \| \mathbf{w} \|^2 + C \sum_{i=1}^N (\xi_i + \xi_i^*)$$  
+  $$\text{s.t.} \quad \begin{cases} 
+  y_i - (\mathbf{w}^T \phi(\mathbf{x}_i) + b) \leq \epsilon + \xi_i \\
+  (\mathbf{w}^T \phi(\mathbf{x}_i) + b) - y_i \leq \epsilon + \xi_i^* \\
+  \xi_i, \xi_i^* \geq 0 
+  \end{cases}$$
+- **参数**：  
+  - $\epsilon$：控制回归带宽度（大 $\epsilon$ → 模型简单）  
+  - $C$：平衡平坦性与误差容忍度
+
+#### 8.3.2 对偶问题
+- **回归形式**：$f(\mathbf{x}) = \sum_{i} (\lambda_i - \lambda_i^*) K(\mathbf{x}_i, \mathbf{x}) + b$
+- **支持向量**：$|\lambda_i - \lambda_i^*| > 0$ 的样本（位于间隔带外）
+
+---
+
+### **IV. 关键对比与考试重点**
+| **概念**          | 分类SVM                         | 回归SVM                     |
+|--------------------|--------------------------------|----------------------------|
+| **目标**          | 最大化分类间隔                | 最小化 $\epsilon$-带外误差 |
+| **损失函数**      | 合页损失 (Hinge Loss)         | $\epsilon$-不敏感损失      |
+| **支持向量**      | 边界上的点 & 错分点           | 落在间隔带外的点           |
+| **参数影响**      | $C$ 控制分类严格性            | $\epsilon$ 控制回归带宽度  |
+
+> **重要概念**：  
+> 1. 必考推导：软间隔SVM对偶问题、KKT条件  
+> 2. 核函数选择：高斯核参数 $\gamma$ 的作用（$\gamma \uparrow$ → 模型更复杂）  
+> 3. 回归SVM图解：理解 $\xi_i$ 和 $\xi_i^*$ 对应上/下界误差
 
 
-
-
-
-
-
-## 8. SVM支持向量机
 
 
 - 第四章介绍了当两个类别线性可分时的最优分离超平面
