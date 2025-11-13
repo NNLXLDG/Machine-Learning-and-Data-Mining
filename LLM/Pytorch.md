@@ -1,16 +1,15 @@
-# Pytorch
+# 深度学习框架 Pytorch
+在深度学习初始阶段，每个深度学习研究者都需要写大量的重复代码。为了提高工作效率，这些研究者就将这些代码写成了一个框架放到网上让所有研究者一起使用。接着，网上就出现了不同的框架。随着时间的推移，最为好用的几个框架被大量的人使用从而流行了起来。这些框架对底层细节进行抽象，而不用耗费大量时间编写底层 CUDA 或 C++ 代码。
+
+
+全世界比较有影响力的深度学习框架有Tensorflow、Keras、Caffe、Torch和PyTorch、 MXNet、CNTK、PaddlePaddle。
+
 
 ## 1 PyTorch 简介
 PyTorch 是一个开源的 Python 机器学习库，基于 Torch 库，底层由 C++ 实现，应用于人工智能领域，如计算机视觉和自然语言处理。PyTorch 最初由 Meta Platforms 的人工智能研究团队开发，现在属于Linux 基金会的一部分。
 
 许多深度学习软件都是基于 PyTorch 构建的，包括特斯拉自动驾驶、Uber 的 Pyro、Hugging Face 的 Transformers、 PyTorch Lightning 和 Catalyst。
 
-**PyTorch 特性**
-+ 动态计算图（Dynamic Computation Graphs）： PyTorch 的计算图是动态的，这意味着它们在运行时构建，并且可以随时改变。这为实验和调试提供了极大的灵活性，因为开发者可以逐行执行代码，查看中间结果。
-+ 自动微分（Automatic Differentiation）： PyTorch 的自动微分系统允许开发者轻松地计算梯度，这对于训练深度学习模型至关重要。它通过反向传播算法自动计算出损失函数对模型参数的梯度。
-+ 张量计算（Tensor Computation）： PyTorch 提供了类似于 NumPy 的张量操作，这些操作可以在 CPU 和 GPU 上执行，从而加速计算过程。张量是 PyTorch 中的基本数据结构，用于存储和操作数据。
-+ 丰富的 API： PyTorch 提供了大量的预定义层、损失函数和优化算法，这些都是构建深度学习模型的常用组件。
-+ 多语言支持： PyTorch 虽然以 Python 为主要接口，但也提供了 C++ 接口，允许更底层的集成和控制。
 
 **动态计算图（Dynamic Computation Graph）**
 + PyTorch 最显著的特点之一是其动态计算图的机制。与 TensorFlow 的静态计算图（graph）不同，PyTorch 在执行时构建计算图，这意味着在每次计算时，图都会根据输入数据的形状自动变化。
@@ -21,14 +20,10 @@ PyTorch 是一个开源的 Python 机器学习库，基于 Torch 库，底层由
 + 自动求导（Autograd），PyTorch 内置的自动求导引擎，能够自动追踪所有张量的操作，并在反向传播时计算梯度。通过 requires_grad 属性，可以指定张量需要计算梯度。支持高效的反向传播，适用于神经网络的训练。
 
 ## 2 TensorFlow 与 PyTorch 对比
-+ PyTorch 的动态计算图使得它更加灵活，适合快速实验和研究；而 TensorFlow 的静态计算图在生产环境中更具优化空间。
-+ PyTorch 在调试时更加方便，TensorFlow 则在部署上更加成熟，支持更广泛的硬件和平台。
-+ 近年来，TensorFlow 也引入了动态图（如 TensorFlow 2.x），使得两者在功能上趋于接近。
-+ 其他深度学习框架，如 Keras、Caffe 等也有一定应用，但 PyTorch 由于其灵活性、易用性和社区支持，已经成为很多深度学习研究者和开发者的首选框架。
 
 
 ## 3 PyTorch 基础
-PyTorch 是一个开源的深度学习框架，以其灵活性和动态计算图而广受欢迎。PyTorch 主要有以下几个基础概念：**张量（Tensor）、自动求导（Autograd）、神经网络模块（nn.Module）、优化器（optim）** 等。
+PyTorch 主要有以下几个基础概念：**张量（Tensor）、自动求导（Autograd）、神经网络模块（nn.Module）、优化器（optim）** 等。
 
 + 张量（Tensor）：PyTorch 的核心数据结构，支持多维数组，并可以在 CPU 或 GPU 上进行加速计算。
 + 自动求导（Autograd）：PyTorch 提供了自动求导功能，可以轻松计算模型的梯度，便于进行反向传播和优化。
@@ -62,9 +57,9 @@ print(c)
 
 # 从 NumPy 数组创建张量
 import numpy as np
-numpy_array = np.array([[1, 2], [3, 4]])
-tensor_from_numpy = torch.from_numpy(numpy_array)
-print(tensor_from_numpy)
+a= np.array([[1, 2], [3, 4]])
+b= torch.from_numpy(a)
+print(b)
 
 # 在指定设备（CPU/GPU）上创建张量
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -113,7 +108,7 @@ print(g.shape)  # 返回形状
 自动求导基于链式法则（Chain Rule），这是一个用于计算复杂函数导数的数学法则。链式法则表明，复合函数的导数是其各个组成部分导数的乘积。在深度学习中，模型通常是由许多层组成的复杂函数，自动求导能够高效地计算这些层的梯度。
 
 
-PyTorch 提供了自动求导功能，通过 autograd 模块来自动计算梯度。torch.Tensor 对象有一个 requires_grad 属性，用于指示是否需要计算该张量的梯度。当你创建一个requires_grad=True 的张量时，PyTorch 会自动跟踪所有对它的操作，以便在之后计算梯度。
+PyTorch 提供了自动求导功能，通过 autograd 模块来自动计算梯度。torch.Tensor 对象有一个 **requires_grad** 属性，用于指示是否需要计算该张量的梯度。当你创建一个requires_grad=True 的张量时，PyTorch 会自动跟踪所有对它的操作，以便在之后计算梯度。
 
 创建需要梯度的张量:
 ```python
@@ -146,13 +141,14 @@ tensor([[-0.1908,  0.2811],
 tensor(18.1469, grad_fn=<MeanBackward0>)
 ```
 
-----------
+--------------
 
 `神经网络（nn.Module）`是一种模仿人脑神经元连接的计算模型，由多层节点（神经元）组成，用于学习数据之间的复杂模式和关系。神经网络通过调整神经元之间的连接权重来优化预测结果，这一过程涉及前向传播、损失计算、反向传播和参数更新。
 
 神经网络的类型包括**前馈神经网络、卷积神经网络（CNN）、循环神经网络（RNN）和长短期记忆网络（LSTM）**，它们在图像识别、语音处理、自然语言处理等多个领域都有广泛应用。
 
 PyTorch 提供了一个非常方便的接口来构建神经网络模型，即 torch.nn.Module。我们可以继承 nn.Module 类并定义自己的网络层。
+
 ```python
 import torch.nn as nn
 import torch.optim as optim
