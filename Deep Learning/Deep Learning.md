@@ -452,31 +452,58 @@ Inception V4 相比 V3 主要是结合了微软的 ResNet，将错误率进一�
 ### 2.7 Residual Neural Net(ResNet)
 ResNet(Residual Neural Net)由微软研究院Kaiming He等4名华人提出，通过使用Residual Unit成功训练152层深的神经网络，在ILSVRC 2015比赛中获得了冠军，取得3.57%的错误率，同时参数比VGG少，效果非常突出。发表于论文《Deep Residual Learning for Image Recognition》
 
+#### 2.7.1 残差网络背景
 
-**网络深度增加带来以下问题：**
-1. 一是梯度弥散和爆炸现象，导致了训练十分难收敛，这类问题能够通过normalized initialization 和intermediate normalization layers解决；
-2. 另一个网络性能退化现象（ Degradation问题）。对合适的深度模型继续增加层数，模型准确率会下滑（不是过拟合造成），training error和test error都会很高，相应的现象在CIFAR-10和ImageNet都有出现。
+网络变深带来的两个主要问题
++ **梯度消失 / 梯度爆炸（Vanishing / Exploding Gradients）**
+  + 随着反向传播层数增加，链式法则会把梯度乘以大量小于 1（或大于 1）的因子，导致梯度趋近 0（或迅速变大），使低层参数更新极慢或不稳定。
+  + 直接结果是训练变慢或无法收敛。
 
-- 问题解决：网络深度增加带来的梯度弥散和爆炸现象，以及网络性能退化问题（Degradation问题）。
-- 残差块原理：通过全等映射，直接前一层输出到后面的思想，实现了对非常深的模型的稳定学习。残差特征映射通常比在传统架构中学习的无参考映射简单得多。
-- 残差结构：ResNet有很多旁路的支线将输入直接连到后面的层，使得后面的层可以直接学习残差。这种结构也被称为快捷连接。
-- 两种残差学习单元：两层及三层残差学习单元，三层残差学习单元使用了"瓶颈架构"。
++ **退化问题（Degradation / Optimization Difficulty）**
+  + 在一定深度之后，增加网络层数反而使得训练误差（training error）上升，即更深的网络无法拟合比浅网络更简单的函数。相应的现象在CIFAR-10和ImageNet都有出现。
+  + 这**不是过拟合（overfitting）**——训练误差变差说明优化出了问题：更深网络更难被优化到与浅层模型相当的训练误差。
 
-```python
-class ResidualBlock(nn.Module):
-    def __init__(self, in_c, out_c):
-        super().__init__()
-        self.conv = nn.Sequential(
-            nn.Conv2d(in_c, out_c, 3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(out_c, out_c, 3, padding=1)
-        )
-        self.shortcut = nn.Conv2d(in_c, out_c, 1) if in_c != out_c else nn.Identity()
+![alt text](image-21.png)
 
-    def forward(self, x):
-        # ⭐ 残差连接
-        return nn.ReLU()(self.conv(x) + self.shortcut(x))
-```
+
+
+**为什么会出现退化（直观与数学上的理解）**
+
+**直观理解**
++ 难以优化：更深的网络引入了更多非线性变换、更多参数，优化路径变得复杂，梯度在深层传播时会出现消失或方向上噪声累积，导致 SGD 难以找到好解。
++ 恒等映射困难：对于某些任务，理论上深层模型至少能实现与浅层模型相同的表现（可以把额外层学成恒等映射），但在实际训练中，让若干层“学出恒等映射”对优化器并不容易。
+
+**数学理解**
+假设我们希望层堆叠后能实现某个映射 H(x)。传统层直接学习一个映射 H(x)。
++ ResNet 的想法：学习残差函数 F(x) := H(x) - x，于是最终层输出为 y = F(x) + x。
++ 如果最优 H(x) 实际上接近恒等映射（即 H(x) $\approx$ x），那么 F(x) 很容易接近 0，比直接去学习接近恒等映射的 H(x) 更容易（学习“变化”比学习完整映射容易）。
++ 这使得深层网络更容易学习到「不增加损失」或「微小修正」的变换，从而避免退化。
+
+
+ResNet为了解决不断增加神经网络深度时，出现性能退化(Degradation)的问题，提出使用全等映射，直接前一层输出到后面的思想，实现了对非常深的模型的稳定学习。原因在于残差特征映射通常比在传统架构中学习的无参考映射简单得多。
+
+#### 2.7.2 残差块原理
+假定某段神经网络的输入是 x，期望输出是 H(x)，即 H(x) 是期望的复杂潜在映射，但学习难度就比较大；如果我们直接把输入 x 传到输出作为初始结果，通过下图“shortcut connections”（跳跃连接），那么此时我们需要学习的目标就是 F(x)=H(x)-x，于是 ResNet 相当于将学习目标改变了，不再是学习一个完整的输出，而是最优解 H(X) 和全等映射 x 的差值，即残差 F(x)。
+
+![alt text](image-22.png)
+
+#### 2.7.3 两层及三层残差块
+
+![alt text](image-23.png)
+两层残差学习单元中包含两个相同输出通道数的`3*3`卷积，因为残差等于目标输出减去输入，即H(x)-x，因此输入和输出维度和尺度要保持一致；三层残差学习单元使用了Network In Network和Inception Net中的`1*1`卷积，并且是在中间`3*3`的卷积前后都是用了`1*1`卷积，有先降维再升维的操作，称为“瓶颈架构”。
+
+#### 2.7.4 残差结构
+ResNet与普通直连的卷积神经网络最大的区别：
++ ResNet 有很多旁路的支线将输入直接连到后面的层，使得后面的层可以直接学习残差，这种结构也被称为**快捷连接**。
++ 传统的卷积层或全连接层在信息传递时，或多或少会存在信息丢失、损耗等问题；ResNet通过直接将输入信息绕道传到输出，保护信息的完整性，整个网络则只需要学习输入、输出差别的那一部分，简化学习目标和难度。
+![alt text](image-24.png)
+
+首先对输入做了卷积操作，之后包含4个残差块（ResidualBlock）, 最后进行全连接操作以便于进行分类任务，网络构成示意图如下所示。
+![alt text](image-27.png)
+
+**ResNet-18网络结构图**
+![alt text](image-26.png)
+
 ### ResNeXt
 - ResNeXt融合了GoogleNet和ResNet设计的优势，可以看作是ResNet网络的升级版。
 - 利用残差网络中提出的跳跃式连接，并将它们与Inception模块中的多分支架构相结合。
@@ -503,7 +530,6 @@ class ResidualBlock(nn.Module):
 ### 3.1 数据集介绍
 
 #### 3.1.1 ImageNet 
-
 ImageNet 是深度学习图像识别领域最经典、影响力最大的基准数据集之一。它基于 WordNet 语义体系构建，用于图像分类、目标检测等任务。
 
 主要特点：
@@ -684,4 +710,8 @@ Fashion-MNIST：
 | **轻量快速调试** | CIFAR<br>MNIST<br>PASCAL VOC |
 | **生成式任务（GAN / 扩散）** | LSUN<br>CelebA / CelebA-HQ<br>ImageNet（常用于生成模型） |
 | **自动驾驶** | Cityscapes<br>KITTI<br>Waymo Open Dataset |
+
+
+
+
 
