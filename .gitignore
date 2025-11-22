@@ -1,6 +1,7 @@
 *.matrix
 *.csv
 *.txt
+.DS_Store
 
 # Large files (local only, not tracked)
 ML & DL Projects/Seattle/speed_matrix_2015
