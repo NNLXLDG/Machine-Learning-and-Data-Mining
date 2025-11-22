@@ -4,12 +4,12 @@
 
 ### 1.1 目标分类的定义
 - 目标分类（Classification）：将图像结构化为某一类别的信息，用事先确定好的类别来描述图片，解决图中内容是什么的问题。
-![alt text](image-1.png)
+![alt text](assets/image-1.png)
 
 
 ### 1.2 传统目标分类总体框架
 - 传统目标分类主要包含以下几个阶段：预处理、特征选择和提取、建模、匹配。
-![alt text](image-2.png)
+![alt text](assets/image-2.png)
 
 #### 1.2.1 预处理
 - 预处理是尽可能在不改变图像承载的本质信息的前提下，使得每张图像的表观特性（如**颜色分布、整体明暗、尺寸大小**等）尽可能的一致，有利于之后的处理过程。
@@ -30,7 +30,7 @@
 
 #### 1.3.1 支持向量机（SVM）
 - SVM是一种二分类模型，它的目的是寻找一个超平面对样本进行分割，分割的原则是间隔最大化，最终转化为一个凸二次规划问题来求解。
-![alt text](image-3.png)
+![alt text](assets/image-3.png)
 
 #### 1.3.2 KNN (K-Nearest Neighbor)
 - KNN（K最近邻）就是K个最近邻居的意思，说的是每个样本都可以用它最接近的K个邻近值来代表。
@@ -39,17 +39,17 @@
   2. 计算测试样本点（也就是待分类点）到其它每个样本点的距离。
   3. 对每个距离进行排序，然后选择出距离最小的K个点。
   4. 对K个点所属的类别进行比较，根据少数服从多数的原则，将测试样本点归入在K个点中占比最高的那一类。
-![alt text](image-4.png)
+![alt text](assets/image-4.png)
 
 #### 决策树（Decision Tree）
 - 决策树是一种依托于策略抉择而建立起来的树。机器学习中，决策树是一个预测模型，它代表的是对象属性与对象值之间的一种映射关系。
 - 树中每个节点表示某个对象，而每个分叉路径则代表的某个可能的属性值，从根节点到叶节点所经历的路径对应一个判定测试序列。
-![alt text](image-5.png)
+![alt text](assets/image-5.png)
 
 ## 二、经典目标分类网络
 
 ### 2.1 卷积神经网络发展
-![alt text](image-6.png)
+![alt text](assets/image-6.png)
 
 **左侧：早期背景（Neocognitron → LeCun → LeNet）**
 + Neocognitron（1980s，早期受生物启发模型）
@@ -67,7 +67,7 @@
 	+	图上把 AlexNet 标为“历史突破”，并以它为分叉点，指向后续多个研究方向。
 
 
-![alt text](image-7.png)
+![alt text](assets/image-7.png)
 
 **分支一：网络加深（Deeper Networks）**
 + VGG16 → VGG19
@@ -118,7 +118,7 @@
 将 CNN 用作特征提取器，再用 RNN/LSTM 处理序列信息（例如图像描述生成 caption、视频帧序列分析、OCR 中的序列识别等）。适用于需要时序建模的视觉任务。
 
 ### 2.2 LeNet5
-![alt text](image-8.png)
+![alt text](assets/image-8.png)
 - LeNet5是手写字体识别模型，发表于1998年。
 - LeNet5通过巧妙的设计，利用卷积、参数共享、池化等操作提取特征，避免了大量的计算成本，最后再使用全连接神经网络进行分类识别。
 - LeNet5具备的特点：
@@ -162,12 +162,12 @@ class LeNet(nn.Module):
 - 技术特点：
   - 使用ReLU（Rectified Linear Units）作为CNN的激活函数，解决了Sigmoid在网络较深时的梯度弥散问题。
   - **为避免过拟合，训练时前两个全连接层使用Dropout，随机忽略一部分神经元。**
-  ![alt text](image-9.png)
+  ![alt text](assets/image-9.png)
   - 使用重叠的**最大池化**(max pooling)，避免平均池化的模糊化效果。
   - 提出了**LRN层（卷积之后进行归一化处理）**，对局部神经元的活动创建竞争机制。
   - 数据增强：利用**随机裁剪和镜像翻转操作**增加训练数据量，降低过拟合。
   - 利用GPU强大的并行计算能力加速网络训练过程，并采用GPU分块训练的方式解决显存对网络规模的限制。
-  ![alt text](image-10.png)
+  ![alt text](assets/image-10.png)
 
 ```python
 class AlexNet(nn.Module):
@@ -213,13 +213,13 @@ class AlexNet(nn.Module):
 > 参数量=卷积长✖️卷积宽✖️Cin(输入通道数)✖️Cout(卷积核个数)
 
 
-### 2.4 Network in Network (NiN)![alt text](image-14.png)
+### 2.4 Network in Network (NiN)![alt text](assets/image-14.png)
 - NiN使用较少参数就取得了AlexNet的效果（参数大小为230M，而NiN仅为29M）。
 - 主要创新点：
   1. MLP Convolution Layers：在常规卷积后接若干1x1卷积，增强网络抽象能力。所谓MLPConv其实就是在常规卷积（感受野大于1的）后接若干1x1卷积，输入的每个特征图视为一个神经元，特征图通过1x1卷积就类似多个神经元线性组合，这样就像是MLP（多层感知机）。该网络相对于普通卷积层（感受视野大于1 ）的抽象能力得以增强。
-  ![alt text](image-13.png)
+  ![alt text](assets/image-13.png)
 
-  2. Global Average Pooling：NiN最后使用全局平均值池化，然后全连接，因为没有参数，可以避免产生过拟合，同时可以对空间信息进行汇总，因此对输入的空间转换具有更强的鲁棒性。替代全连接层效果：减少参数数量，减少计算量，减少过拟合。![alt text](image-11.png)![alt text](image-12.png)
+  2. Global Average Pooling：NiN最后使用全局平均值池化，然后全连接，因为没有参数，可以避免产生过拟合，同时可以对空间信息进行汇总，因此对输入的空间转换具有更强的鲁棒性。替代全连接层效果：减少参数数量，减少计算量，减少过拟合。![alt text](assets/image-11.png)![alt text](assets/image-12.png)
 
 ```python
 class NIN(nn.Module):
@@ -304,7 +304,7 @@ Google Inception Net首次出现在ILSVRC2014的比赛中（和VGG同年），�
 GoogleNet（Inception V1）共包括22个权重层，首次提出使用较为复杂的多分支网络模块搭建网络。网络的基本构建块是“Inception模块”。该模块的中心思想是将所有基本处理块（发生在常规顺序卷积网络中）并行放置并组合它们的输出特征表示。这样设计的好处是可以将多个Inception模块堆叠在一起以创建一个巨大的网络，而无需担心网络不同阶段的每个单独层的设计。这一模式引领了后续研究中网络搭建的主流模式。
 
 #### 2.6.1 Inception Module 结构图
-![alt text](image-15.png)
+![alt text](assets/image-15.png)
 
 + 经典的Inception模块的基本结构有四个分支：
   + 第一个分支对输入进行`1*1`的卷积。提取细粒度的局部特征，同时可通过调整输出通道数实现 “降维 / 升维”，减少后续计算量。
@@ -328,7 +328,7 @@ Inception模块将`1x1`，`3x3`，`5x5`的卷积和`3x3`的池化堆叠在一起
 
 #### 2.6.3 Inception V2 
 Inception V2 借鉴了VGG 用两个`3*3`的卷积代替`5*5`的大卷积的方法，在降低参数的同时建立了更多的非线性变换，使得CNN 对特征的学习能力更强：
-![alt text](image-16.png)
+![alt text](assets/image-16.png)
 
 Inception V2提出了著名的 **Batch Normalization**（以下简称BN）方法。
 
@@ -345,7 +345,7 @@ BN 是一个非常有效的正则化方法，可以让大型卷积网络的训�
 
 BN是由Google于2015年提出，这是一个深度神经网络训练的技巧，它不仅可以加快模型的收敛速度，而且更重要的是在一定程度缓解了深层网络中“梯度弥散”的问题，从而使得训练深层网络模型更加容易和稳定。
 
-![alt text](image-17.png)
+![alt text](assets/image-17.png)
 
 如上图所示，每层BN步骤主要分为4步：
 1. 求每一个训练批次数据的均值；
@@ -357,7 +357,7 @@ BN是由Google于2015年提出，这是一个深度神经网络训练的技巧�
 
 #### 2.6.5 Inception V3 
 V3引入了 **Factorization into small convolutions** （小卷积因子分解）的思想，将一个较大的二维卷积拆成两个较小的一维卷积，比如将`7*7`卷积拆成`1*7`卷积和`7*1`卷积，或者将`3*3`卷积拆成`1*3`卷积和`3*1`卷积，如下图所示。
-![alt text](image-18.png)
+![alt text](assets/image-18.png)
 
 引入了 Factorization into small convolutions 的思想的好处：
 1. 节约了大量参数，加速运算并减轻了过拟合；
@@ -367,7 +367,7 @@ V3引入了 **Factorization into small convolutions** （小卷积因子分解�
 
 Inception V3 还优化了 Inception Module 的结构，现在 Inception Module 有`35*35`、`17*17`和`8*8`三种不同结构。这些 Inception Module 只在网络的后部出现，前部还是普通的卷积层。并且 Inception V3 除了在 Inception Module 中使用分支，还在分支中使用了分支（`8*8`的结构中）。最终取得 top-5 错误率 3.5%。
 
-![alt text](image-19.png)
+![alt text](assets/image-19.png)
 
 在卷积神经网络的结构中，“**网络的前部**” 和 “**后部**” 是基于特征提取的阶段和特征图的抽象程度来划分的：
 + 网络前部：靠近输入层，负责提取低级、基础的视觉特征（如边缘、纹理），通常使用普通卷积层即可高效完成。
@@ -377,7 +377,7 @@ Inception V3 还优化了 Inception Module 的结构，现在 Inception Module �
 #### 2.6.6 Inception V4
 Inception V4 相比 V3 主要是结合了微软的 ResNet，将错误率进一步减少到3.08%。
 
-![alt text](image-20.png)
+![alt text](assets/image-20.png)
 
 #### 2.6.7 Inception 各版本对比总结
 | 版本 | 算法创新（核心改进） | Test Error |
@@ -402,7 +402,7 @@ ResNet(Residual Neural Net)由微软研究院Kaiming He等4名华人提出，通
   + 在一定深度之后，增加网络层数反而使得训练误差（training error）上升，即更深的网络无法拟合比浅网络更简单的函数。相应的现象在CIFAR-10和ImageNet都有出现。
   + 这**不是过拟合（overfitting）**——训练误差变差说明优化出了问题：更深网络更难被优化到与浅层模型相当的训练误差。
 
-![alt text](image-21.png)
+![alt text](assets/image-21.png)
 
 
 
@@ -424,24 +424,24 @@ ResNet为了解决不断增加神经网络深度时，出现性能退化(Degrada
 #### 2.7.2 残差块原理
 假定某段神经网络的输入是 x，期望输出是 H(x)，即 H(x) 是期望的复杂潜在映射，但学习难度就比较大；如果我们直接把输入 x 传到输出作为初始结果，通过下图“shortcut connections”（跳跃连接），那么此时我们需要学习的目标就是 F(x)=H(x)-x，于是 ResNet 相当于将学习目标改变了，不再是学习一个完整的输出，而是最优解 H(X) 和全等映射 x 的差值，即残差 F(x)。
 
-![alt text](image-22.png)
+![alt text](assets/image-22.png)
 
 #### 2.7.3 两层及三层残差块
 
-![alt text](image-23.png)
+![alt text](assets/image-23.png)
 两层残差学习单元中包含两个相同输出通道数的`3*3`卷积，因为残差等于目标输出减去输入，即H(x)-x，因此输入和输出维度和尺度要保持一致；三层残差学习单元使用了Network In Network和Inception Net中的`1*1`卷积，并且是在中间`3*3`的卷积前后都是用了`1*1`卷积，有先降维再升维的操作，称为“瓶颈架构”。
 
 #### 2.7.4 残差结构
 ResNet与普通直连的卷积神经网络最大的区别：
 + ResNet 有很多旁路的支线将输入直接连到后面的层，使得后面的层可以直接学习残差，这种结构也被称为**快捷连接**。
 + 传统的卷积层或全连接层在信息传递时，或多或少会存在信息丢失、损耗等问题；ResNet通过直接将输入信息绕道传到输出，保护信息的完整性，整个网络则只需要学习输入、输出差别的那一部分，简化学习目标和难度。
-![alt text](image-24.png)
+![alt text](assets/image-24.png)
 
 首先对输入做了卷积操作，之后包含4个残差块（ResidualBlock）, 最后进行全连接操作以便于进行分类任务，网络构成示意图如下所示。
-![alt text](image-27.png)
+![alt text](assets/image-27.png)
 
 **ResNet-18网络结构图**
-![alt text](image-26.png)
+![alt text](assets/image-26.png)
 
 ### ResNeXt
 - ResNeXt融合了GoogleNet和ResNet设计的优势，可以看作是ResNet网络的升级版。

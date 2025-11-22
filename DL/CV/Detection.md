@@ -30,7 +30,7 @@
 
 
 ### 1.3 传统目标检测介绍
-![alt text](image-28.png)
+![alt text](assets/image-28.png)
 1. **候选框提取**：通常使用**滑动窗口**方法。
 2. **特征提取**：
    - 底层特征：颜色、纹理等手工设计的特征
@@ -69,7 +69,7 @@
 
 **除 了 一阶段和二阶段的分类之外，还可根据是否使用锚框来进行分类：anchor-based、anchor-free：**
 
-![alt text](image-31.png)
+![alt text](assets/image-31.png)
 
 ## 二、两阶段目标检测网络
 
@@ -92,12 +92,12 @@
 
 空间金字塔(SPP)发布于何凯明2014年的论文：《Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition》，主要的创新点在于解决CNN输入图像大小必须固定的问题，从而可以使得输入图像高宽比和大小任意。
 
-![alt text](image-32.png)
+![alt text](assets/image-32.png)
 
 从下图可知，最左边有16个蓝色小格子的图，它的意思是将从conv5得到的特征映射分成16份，另外16x256中的256表示的
 是channel，即SPP对每一层都分成16份，每份分别池化；中间的4个绿色小格子和右边1个紫色大格子也同理，即将特征映射分别分成4x256和1x256份。
 
-![alt text](image-33.png)
+![alt text](assets/image-33.png)
 
 通过SPP层，特征映射被转化成了16x256+4x256+1x256 = 21x256的矩阵，包含不同图像粒度的特征，在送入全连接时扩展成一维矩阵，即1x10752，因此第一个全连接层的参数就可以设置成10752，这样也就有效解决了从卷积层到全连接层之间的一个过渡问题，从而可以使得输入图像高宽比和大小任意。
 
@@ -113,15 +113,15 @@ ROI pooling具体操作如下：
 2. 将映射后的区域划分为相同大小的sections（sections数量与输出的维度相同）；
 3. 对每个sections进行max pooling操作。
 
-![alt text](image-35.png)
+![alt text](assets/image-35.png)
 
 ROI Pooling和 SPP的区别：
-![alt text](image-42.png)
+![alt text](assets/image-42.png)
 
 ### 2.4 R-CNN 系列
 
 #### 2.4.1 R-CNN
-![alt text](image-29.png)
+![alt text](assets/image-29.png)
 R-CNN算法流程具体过程主要包含4步：
 1. 候选区域生成。提取候选区域（ Region Proposal ），具体采用Selective Search算法，先将图像分割成小区域，然后合并包含同一物体可能性高的区域，并输出候选框，在这一步需要提取约2000个候选区域。在提取完后，还需要将每一个区域进行归一化处理，得到固定大小的图像。
 
@@ -142,13 +142,13 @@ R-CNN算法流程具体过程主要包含4步：
 3. 训练所需空间大：对于SVM和bbox回归训练，需要从每个图像中的每个目标候选框提取特征，并写入磁盘。对于非常深的网络，如VGG16、VOC07训练集上的5K图像上提取特征需要数百GB的存储空间。
 
 #### 2.4.2 Fast R-CNN
-![alt text](image-30.png)
+![alt text](assets/image-30.png)
 Fast R-CNN算法流程可分为三个步骤：
 1. 一张图像生成1K~2K个候选区域(使用Selective Search方法)；
 2. 将图像输入CNN网络得到相应的特征图，将SS算法生成的候选框投影到特征图上获得相应的特征矩阵；
 3. 将每个特征矩阵通过**ROI Pooling**层缩放到7*7大小的特征图，接着将特征图展平通过一系列全连接层得到分类和回归的预测结果。
 
-![alt text](image-34.png)
+![alt text](assets/image-34.png)
 
 **缺点**：
 - 仍使用Selective Search算法提取候选区域
@@ -177,7 +177,7 @@ Faster R-CNN是何凯明等大神在2015年提出目标检测算法，可以简�
 2. 使用RPN结构生成候选框，将RPN生成的候选框投影到特征图上获取相应的特征矩阵；
 3. 将每个特征矩阵通过ROI Pooling层缩放到7*7大小的特征图，接着将特征图展平通过一系列全连接层得到预期结果。
 
-![alt text](image-36.png)
+![alt text](assets/image-36.png)
 
 - **优点**：
   - 实现了真正的端到端目标检测
@@ -185,7 +185,7 @@ Faster R-CNN是何凯明等大神在2015年提出目标检测算法，可以简�
   - 生成建议框仅需10ms
 
 Faster R-CNN网络结构
-![alt text](image-38.png)
+![alt text](assets/image-38.png)
 
 ##### RPN结构
 RPN的核心思想是使用CNN直接产生Region Proposal，使用的方法本质上就是滑动窗口（只需在最后的特征卷积层上滑动一遍），其首次提出的Anchor机制结合边框回归可以得到多尺度多长宽比的Region Proposal。
@@ -200,7 +200,7 @@ RPN先与特征图进行3x3卷积 ，映射到一个低维向量，再将这个�
 + reg层：预测proposal的anchor对应的proposal的(x, y, w, h)。
 + cls层：判断该proposal是前景(object)还是背景(non-object)。
 
-![alt text](image-37.png)
+![alt text](assets/image-37.png)
 
 
 ##### Anchor Box
@@ -209,7 +209,7 @@ RPN先与特征图进行3x3卷积 ，映射到一个低维向量，再将这个�
 使得模型更容易学习。Anchor由Faster R-CNN中的RPN首次
 引入，大幅提升了检测的精度。
 
-![alt text](image-39.png)
+![alt text](assets/image-39.png)
 
 Anchor为什么要使用不同尺寸和长宽比？为了得到更大的交并比
 (IoU)。通过设置不同的尺度的先验框，就有更高的概率出现对于目标物体有良好匹配度的先验框（体现为高IoU）
@@ -237,9 +237,9 @@ Anochor Box的尺寸该怎么选择？目前anchor box的选择主要有三种�
 
 
 ##### 损失函数
-![alt text](image-40.png)
+![alt text](assets/image-40.png)
 
-![alt text](image-41.png)
+![alt text](assets/image-41.png)
 
 
 ##### IoU（交并比）
