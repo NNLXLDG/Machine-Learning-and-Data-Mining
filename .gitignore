@@ -1,0 +1,8 @@
+*.matrix
+*.csv
+*.txt
+
+# Large files (local only, not tracked)
+ML & DL Projects/Seattle/speed_matrix_2015
+ML & DL Projects/Seattle/speed_matrix_2015_1mph
+ML & DL Projects/Seattle/speed_matrix_2015_5mph
