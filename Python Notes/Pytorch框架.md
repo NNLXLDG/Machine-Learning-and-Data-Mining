@@ -265,7 +265,7 @@ for epoch in range(100):  # 训练 100 轮
 
 ## 4 PyTorch张量
 
-![alt text](1__D5ZvufDS38WkhK9rK32hQ.jpg)
+![alt text](image-8.jpg)
 + 1D Tensor / Vector（一维张量/向量）: 最基本的张量形式，可以看作是一个数组，图中的例子是一个包含 10 个元素的向量。
 + 2D Tensor / Matrix（二维张量/矩阵）: 二维数组，通常用于表示矩阵，图中的例子是一个 4x5 的矩阵，包含了 20 个元素。
 + 3D Tensor / Cube（三维张量/立方体）: 三维数组，可以看作是由多个矩阵堆叠而成的立方体，图中的例子展示了一个 3x4x5 的立方体，其中每个 5x5 的矩阵代表立方体的一个"层"。
