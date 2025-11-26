@@ -1,16 +1,22 @@
-# Python Advanced Techniques for AI Deployment
+# Python Advanced Techniques 
 
-> 本文档面向刚接触 AI 模型部署的学生，旨在通过深入 Python 高级特性，帮助你写出高效、可维护的 AI 工程代码。
+## 1. 执行模型
 
----
+### 1.1 运行机制
 
-## 1. Python 的执行模型
+#### 1.1.1 Python解释器如何工作
+Python 解释器不止一种，有 CPython、IPython、Jython、PyPy 等。
+顾名思义，CPython 就是用 C 语言开发的了，是官方标准实现，拥有良好的生态，所以应用也就最为广泛了。
+而 IPython 是在 CPython 的基础之上在交互式方面得到增强的解释器（http://ipython.org/）。
+Jython 是专为 Java 平台设计的 Python 解释器（http://www.jython.org/），它把 Python 代码编译成 Java 字节码执行。
+PyPy 是 Python 语言（2.7.13和3.5.3）的一种快速、兼容的替代实现（http://pypy.org/），以速度快著称。
 
-### 1.1 Python 的运行机制
 
-**CPython 解释器如何执行代码**
+**字节码**是介于源代码和机器码之间的中间代码，由编译器将高级编程语言（如 Java、Python）的源代码编译生成，以字节（8 位）为基本单位的指令集。它不依赖具体硬件架构，需通过虚拟机（VM）解释或编译为机器码后执行。
 
-你知道吗？Python 代码在执行前会经过以下步骤：
+
+#### 1.1.2 CPython 解释器如何执行代码
+Python 代码在执行前会经过以下步骤：
 
 1. **源代码** → **字节码**（编译）
 2. **字节码** → **机器码**（解释执行）
@@ -26,15 +32,61 @@ def hello():
 # 反编译查看字节码
 dis.dis(hello)
 ```
+结果如下：
+```
+  3           0 RESUME                   0
 
-这很重要，因为：当你用 PyTorch DataLoader 时，每个 worker 进程都需要独立执行字节码，这就涉及到下面的 GIL 问题。
+  4           2 LOAD_CONST               1 (5)
+              4 STORE_FAST               0 (x)
 
-**GIL（全局解释器锁）的本质**
+  5           6 LOAD_CONST               2 (10)
+              8 STORE_FAST               1 (y)
 
-CPython 为了简化内存管理，用一把全局锁（GIL）来保护内存。这意味着：
-- **多线程不能真正并行执行 Python 字节码**（只能轮流执行）
-- **多进程才能真正并行**（每个进程有独立的 GIL）
+  6          10 LOAD_FAST                0 (x)
+             12 LOAD_FAST                1 (y)
+             14 BINARY_OP                0 (+)
+             18 RETURN_VALUE
+```
+当使用 PyTorch DataLoader 时，每个 worker 进程都需要独立执行字节码，这就涉及到下面的 GIL 问题。
 
+#### 1.1.3 深入理解 GIL（全局解释器锁 Global Interpreter Lock）
+
+**GIL是什么？**
+
+GIL 是 CPython 解释器中的一个机制，用于保护内存管理，防止多个线程同时执行 Python 字节码时出现数据竞争和内存破坏的问题。
+
+> GIL是在实现Python解析器(**CPython**)时所引入的一个概念。Python是一套语言（语法）标准，同样一段代码可以通过CPython，PyPy，Psyco等不同的Python执行环境来执行。像其中的JPython就没有GIL。然而因为CPython是大部分环境下默认的Python执行环境。所以在很多人的概念里CPython就是Python，也就想当然的把GIL归结为Python语言的缺陷。所以这里要先明确一点：**GIL并不是Python的特性，Python完全可以不依赖于GIL。**
+
+**GIL为什么会存在？**
+
+GIL的问题其实是由于近十几年来应用程序和操作系统逐步从多任务单核心演进到多任务多核心导致的 , 在一个古老的单核CPU上调度多个线程任务，大家相互共享一个全局锁，谁在CPU执行，谁就占有这把锁，直到这个线程因为IO操作或者Timer Tick到期让出CPU，没有在执行的线程就安静的等待着这把锁（除了等待之外，他们应该也无事可做）。下面这个图演示了一个单核CPU的线程调度方式：
+![alt text](image-8.png)
+
+然而，在多核CPU上，多个线程可以同时在不同的CPU核心上执行，这时GIL就成了一个瓶颈，因为它限制了同一时刻只能有一个线程在执行Python字节码，导致多线程无法充分利用多核CPU的优势。
+
+为了解决这个问题，Python社区引入了**多进程（multiprocessing）模块**，通过创建多个独立的进程来实现真正的并行计算，每个进程都有自己的Python解释器和GIL，从而绕过了GIL的限制。
+
+**多线程 vs 多进程**
+
+在 Python 中，多线程和多进程各有优缺点：
+- **多线程**：
+  - 优点：线程间切换开销小，内存占用低，适合 IO 密集型任务。
+  - 缺点：受 GIL 限制，无法充分利用多核 CPU，适合轻量级任务。
+  - 适用场景：网络请求、文件读写等 IO 密集型任务。
+- **多进程**：
+  - 优点：每个进程有独立的 GIL，能充分利用多核 CPU，适合 CPU 密集型任务。
+  - 缺点：进程间切换开销大，内存占用高，适合重量级任务。
+  - 适用场景：数据处理、科学计算等 CPU 密集型任务。
+
+根据以上分析，有两个建议：
+
+1. 在以IO操作为主的IO密集型应用中，多线程和多进程的性能区别并不大，原因在于即使在Python中有GIL锁的存在，由于线程中的IO操作会使得线程立即释放GIL，切换到其他非IO线程继续操作，提高程序执行效率。相比进程操作，线程操作更加轻量级，线程之间的通讯复杂度更低，建议使用多线程。
+
+2. 如果是计算密集型的应用，尽量使用多进程或者协程来代替多线程。
+
+
+
+**GIL的实际影响示例**
 ```python
 import threading
 import time
@@ -46,43 +98,95 @@ def cpu_intensive():
         total += i
     return total
 
-# ❌ 多线程版本 - 反而更慢（因为 GIL）
-start = time.time()
-t1 = threading.Thread(target=cpu_intensive)
-t2 = threading.Thread(target=cpu_intensive)
-t1.start()
-t2.start()
-t1.join()
-t2.join()
-print(f"多线程耗时: {time.time() - start:.2f}s")  # 约 8秒
+if __name__ == '__main__':
+    # 多线程版本 - 反而更慢（因为 GIL）
+    start = time.time()
+    t1 = threading.Thread(target=cpu_intensive)
+    t2 = threading.Thread(target=cpu_intensive)
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
+    print(f"多线程耗时: {time.time() - start:.2f}s")  
 
-# ✅ 多进程版本 - 真正并行
-from multiprocessing import Process
-start = time.time()
-p1 = Process(target=cpu_intensive)
-p2 = Process(target=cpu_intensive)
-p1.start()
-p2.start()
-p1.join()
-p2.join()
-print(f"多进程耗时: {time.time() - start:.2f}s")  # 约 4秒
+    # 多进程版本 - 真正并行
+    from multiprocessing import Process
+    start = time.time()
+    p1 = Process(target=cpu_intensive)
+    p2 = Process(target=cpu_intensive)
+    p1.start()
+    p2.start()
+    p1.join()
+    p2.join()
+    print(f"多进程耗时: {time.time() - start:.2f}s")  
 ```
+多线程耗时: 3.38s
+多进程耗时: 1.65s
+
 
 **为什么 AI 代码中常常用多进程而不是多线程？**
 
 因为：
-- **数据加载** = CPU 密集型（数据增强、预处理都是 CPU 操作）
-- **多线程被 GIL 阻挡**，无法真正并行
-- **PyTorch DataLoader** 默认用 `num_workers > 0` 就是多进程的原因
+- 数据加载 = CPU 密集型（数据增强、预处理都是 CPU 操作）
+- PyTorch DataLoader 默认用 `num_workers > 0` 时，使用多进程加载数据，绕过 GIL 限制，实现真正并行。
 
-**💡 对 AI 的重要性**：理解这一点，你就知道为什么设置 `DataLoader(num_workers=4)` 能真正加速数据加载。
 
----
+### 1.2 变量、作用域与内存管理
 
-### 1.2 深入理解变量、作用域与内存管理
+#### 1.2.1 Python引用计数机制
+在python中的垃圾回收机制主要是以引用计数为主要手段以标记清除和隔代回收机制为辅的手段 。可以对内存中无效数据的自动管理，怎么知道一个对象能不能被调用了呢？
 
-**Python 的引用计数机制**
+**回顾内存地址**
 
+Python中的任何变量都有对应的内存引用，也就是内存地址。如果不是容器类型，那么直接引用和赋值，内存地址都是不会的。
+
+```
+>>> a = 1
+>>> b = 1
+>>> id(a)
+140709385600544
+>>> id(b)
+140709385600544
+```
+如果在内存中创建了一个list对象（容器），而且对该对象进行了引用。那么b = [1,2]和c = a有什么区别？
+```
+>>> a = [1,2]
+>>> b = [1,2]
+>>> id(a)
+1966828025736
+>>> id(b)
+1966828044488
+>>> c = a
+>>> id(c)
+1966828025736
+```
+首先在内存1966828025736处创建了一个列表 [1,2]，然后定义了一个名为a的变量。b = [1,2]会新开一个内存地址，c = a直接赋值直接引用[1,2]的内存地址。
+
+**引用计数**
+
+在一些代码中，如果存在一些变量但是没有用，会造成内存空间，因此叫做垃圾，所以要回收。
+
+引用计数也是一种最直观，最简单的垃圾收集技术。原理非常简单，每一个对象都包含了两个头部信息，一个是类型标志符，标识这个对象的类型；另一个是计数器，记录当前指向该对象的引用数目，表示这个对象被多少个变量名所引用。
+
+CPython 使用引用计数来管理内存，所有 Python 脚本中创建的实例，都会有一个引用计数，来记录有多少个指针指向它。当引用计数只有 0 时，则会自动释放内存。
+
+在Python中通过sys.getrefcount查看引用计数的方法：
+
+```python
+print(sys.getrefcount())
+```
+
+**注意:调用getrefcount()函数会临时增加一次引用计数，得到的结果比预期的多一次。**
+
+比如，下面这个例子中，a 的引用计数是 3，因为有 a、b 和作为参数传递的 getrefcount 这三个地方，都引用了一个空列表。
+
+```
+>>> import sys
+>>> a = []
+>>> b = a
+>>> print(sys.getrefcount(a))
+3
+```
 Python 用引用计数来管理内存：
 - 每个对象都有一个 `refcount`（引用计数）
 - 当 refcount = 0 时，垃圾回收器立即释放内存
@@ -100,8 +204,73 @@ del y  # 引用计数 -1
 print(sys.getrefcount(x))  # 回到 2
 ```
 
-**局部变量 vs 闭包变量**
+**计数增加和减少**
 
+下面引用计数增加的场景：
+
++ 对象被创建并赋值给某个变量，比如：a = 'ABC'
++ 变量间的相互引用（相当于变量指向了同一个对象），比如：b=a
++ 变量作为参数传到函数中。比如：ref_method(a)，
++ 将对象放到某个容器对象中(列表、元组、字典)。比如：c = [1, a, 'abc']
+
+引用计数减少的场景：
+
++ 当一个变量离开了作用域，比如：函数执行完成时，执行方法前后的引用计数保持不变，这就是因为方法执行完后，对象的引用计数也会减少，如果在方法内打印，则能看到引用计数增加的效果。
++ 对象的引用变量被销毁时，比如del a或者del b。注意如果del a，再去获取a的引用计数会直接报错。
++ 对象被从容器对象中移除，比如：c.remove(a)
++ 直接将整个容器销毁，比如：del c
++ 对象的引用被赋值给其他对象，相当于变量不指向之前的对象，而是指向了一个新的对象，这种情况，引用计数肯定会发生改变。(排除两个对象默认引用计一致的场景)。
+
+
+
+
+#### 1.2.2 全局变量 vs 闭包变量
+**局部变量**
+```python
+def func():
+    x = 10    # x 是局部变量
+    print(x)
+ 
+func()
+#print(x) # 报错：x 未定义（超出作用域）
+
+```
+**全局变量**
+```python
+name = "Alice"  #全局变量
+def greet():
+    print(f"你好,{name}")  # 可以访问全局变量
+ 
+greet()
+print(name)  #同样可访问
+```
+**函数中修改全局变量**
+```python
+count = 0
+ 
+def add():
+    # count += 1 # 报错：UnboundLocalError,解释器认为count是局部变量但未赋值
+    print(count)
+
+add()
+```
+**使用global关键字修改全局变量**
+```python
+count = 0
+ 
+def add():
+    global count  #声明我们相用的是全局变量
+    conut += 1
+    print("当前计数:",count)
+ 
+ 
+add()
+print(count)       #输出：1
+```
+**嵌套函数与闭包（Closure）**
+什么是闭包（Closure）？
+
+一个内部函数引用了它外部函数的局部变量，即使外部函数已经执行完毕，这个内部函数依然“记得”它外部的变量
 ```python
 def outer():
     captured = [1, 2, 3]  # 闭包中被捕获的变量
@@ -115,8 +284,18 @@ def outer():
 func = outer()
 # captured 仍然在内存中，因为被 inner 引用（闭包）
 ```
+结构特征（三个条件）：
+1. 函数嵌套：函数里面定义函数
+2. 内部函数使用了外部函数的局部变量
+3. 外部函数返回内部函数
 
-这在 AI 代码中很关键：
+**为什么闭包重要？**
+1. 延迟执行+记住状态：闭包允许函数在未来某个时间点执行，并且记住当时的环境状态
+2. 不污染全局变量：用函数内变量存状态而不暴露外部，避免命名冲突
+3. 函数工厂，回调封装：闭包可以动态生成函数，常用于回调、事件处理等场景
+
+
+这在数据引入代码中很关键：
 ```python
 def create_data_loader(data_list):
     """工厂函数"""
@@ -129,38 +308,72 @@ loader = create_data_loader([1,2,3,...,1000000])
 # 即使数据集很大，只要 loader 被引用，data_list 就一直在内存中
 ```
 
-**id() 与对象驻留机制**
+**闭包变量 vs 全局变量的区别**
+![alt text](image-9.png)
 
+![alt text](image-10.png)
+
+
+#### 1.2.3 id ( ) 与对象驻留机制
+**驻留机制是什么？**
+
+驻留机制是 Python 为了优化内存使用和提升性能的一种缓存机制。对于一些不可变对象，Python 会在内存中保留这些对象的一个副本（驻留池）。当需要创建相同值的对象时，直接引用已有的对象，而不是重新分配内存。
+
+
+**具有驻留机制的类型**
+![alt text](image-11.png)
+
+符合标识符规则的字符串：仅由字母、数字、下划线组成，不以数字开头
+
+**不具备驻留机制的类型**
+![alt text](image-12.png)
+
+
+**手动驻留**
+
+如果字符串是通过表达式（如 +、join）动态生成的，默认不会驻留。对于动态生成的字符串和其他不符合自动驻留条件的对象，可以使用 sys.intern() 手动驻留。不符合标识符规则的字符串，可以使用 sys.intern() 强制驻留。
 ```python
-# 小整数驻留（CPython 优化）
-a = 256
-b = 256
-print(a is b)  # True（同一对象）
+import sys
 
-c = 257
-d = 257
-print(c is d)  # False（不同对象）
+a = "hello, world"
+b = "hello, world"
+print(a is b)  # False
 
-# 字符串驻留
-s1 = "hello_world"
-s2 = "hello_world"
-print(s1 is s2)  # True（驻留）
+c = sys.intern("hello, world")
+d = sys.intern("hello, world")
+print(c is d)  # True
 ```
+```python
+# 使用 join 动态生成字符串
+a = "".join(["hello", "world"])
+b = "helloworld"
+print(a, b)
+print(a is b)  # False，因为 a 是动态生成的，b 是字面量字符串
+print(a == b)  # True，因为内容相同
+```
+对动态生成的字符串，可以使用 sys.intern() 强制驻留
+```python
+import sys
 
+s1 = "hello, " + "world"         # 动态生成
+s2 = sys.intern("hello, world")  # 手动驻留
+print(s1 is s2)                  # False
+print(sys.intern(s1) is s2)      # True  
+```
 这看似无关，但在处理数据增强时，如果你不小心多次复制了数据，引用计数和驻留机制可能导致内存泄漏。
 
-**💡 对 AI 的重要性**：
+
 
 避免数据增强/加载时出现隐性复制 → 降低显存/内存消耗。例如：
 
 ```python
-# ❌ 错误方式：多次复制数据
+# 错误方式：多次复制数据
 def bad_augment(image):
     img1 = image.copy()      # 多余复制
     img2 = img1.copy()       # 又复制了
     return img2
 
-# ✅ 正确方式：原地操作或少复制
+# 正确方式：原地操作或少复制
 import numpy as np
 def good_augment(image):
     # 直接修改，减少内存开销
@@ -168,10 +381,7 @@ def good_augment(image):
     return image
 ```
 
-
----
-
-## 2. 迭代器与生成器（数据加载的基础）
+## 2. 迭代器与生成器
 
 ### 2.1 迭代器协议
 
@@ -690,9 +900,9 @@ result = model_inference(image_hash)  # 直接从缓存返回
 
 ---
 
-## 4. 并行 / 并发（AI 数据处理的核心技能）
+## 4. 并行 / 并发
 
-### 4.1 Threading（多线程）
+### 4.1 Threading 多线程
 
 多线程适合 **IO 密集型** 任务（如网络请求、文件 IO）。但由于 GIL，不适合 CPU 密集型任务。
 
