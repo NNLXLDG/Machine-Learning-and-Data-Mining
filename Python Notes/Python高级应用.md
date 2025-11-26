@@ -556,12 +556,57 @@ class CustomImageDataset(data.Dataset):
             image = self.transform(image)
         return image, self.labels[idx]
 ```
-
-
-
 ## 3. 装饰器：函数的增强
+我们先来看一个简单的例子，这个例子里我们定义了一个装饰器，用于在greet()函数执行前后各打印一条消息。
+```python
+# 定义一个简单的装饰器
+def simple_decorator(func):     # 传入一个函数作为参数
+    # 包装原始函数的内部函数
+    def wrapper():
+        print("即将执行函数...")
+        func()                  # 执行原始函数
+        print("函数执行完毕。")
+    return wrapper
 
-装饰器是 Python 最强大的特性之一，但也是最容易被误用的。在 AI 工程中，装饰器用于记录训练日志、自动重试、性能监控等。掌握它，能让你的代码更简洁、可维护。
+# 使用装饰器
+@simple_decorator
+def greet():
+    print("你好！")
+
+# 调用被装饰的函数
+greet()
+```
+```
+即将执行函数...
+你好！
+函数执行完毕。
+```
+**装饰器就是一个语法糖**
+
+通过上面的分析可以看出，这两种写法貌似是等效的
+```python
+# 写法一
+@simple_decorator
+def greet():
+    print("你好！")
+
+greet() # 调用greet
+
+# 写法二
+closure = simple_decorator(greet)
+closure() # 调用closure
+```
+我们再进一步，其实写法二没必要引入一个新的变量closure，我们完全可以**复用greet**。
+```python
+# 写法三
+greet = simple_decorator(greet)
+greet() # greet
+
+## greet本身指向自己定义的代码
+## simple_decorator(greet) 返回wrapper，这是一个闭包
+## 直接让greet指向新的闭包
+## 这样调用greet()的时候，相当于调用的是闭包
+```
 
 ### 3.1 装饰器的核心思想
 
