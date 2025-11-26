@@ -10,7 +10,7 @@
 - 进阶算法：A3C / PPO 的思想与实现要点
 - 实战：如何使用 Gym/Gymnasium 搭建与运行 RL 环境
 - 深度强化学习：用深度网络逼近价值与策略的注意事项
----
+
 
 ## 1. 强化学习是什么
 
@@ -28,11 +28,11 @@
 - 策略 `π(a|s)`：在状态 `s` 下选择动作 `a` 的规则（可随机）。
 - 目标：让长期累计奖励最大化。
 
----
+
 
 ## 2. 数学基础：MDP、回报与价值函数
 
-强化学习通常建立在马尔可夫决策过程（Markov Decision Process, MDP）之上：
+强化学习通常建立在**马尔可夫决策过程（Markov Decision Process, MDP）** 之上：
 
 \[ \text{MDP} = \langle \mathcal{S}, \mathcal{A}, \mathcal{P}, r, \gamma \rangle \]
 

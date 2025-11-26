@@ -5,11 +5,7 @@
 ### 1.1 运行机制
 
 #### 1.1.1 Python解释器如何工作
-Python 解释器不止一种，有 CPython、IPython、Jython、PyPy 等。
-顾名思义，CPython 就是用 C 语言开发的了，是官方标准实现，拥有良好的生态，所以应用也就最为广泛了。
-而 IPython 是在 CPython 的基础之上在交互式方面得到增强的解释器（http://ipython.org/）。
-Jython 是专为 Java 平台设计的 Python 解释器（http://www.jython.org/），它把 Python 代码编译成 Java 字节码执行。
-PyPy 是 Python 语言（2.7.13和3.5.3）的一种快速、兼容的替代实现（http://pypy.org/），以速度快著称。
+Python 解释器不止一种，有 **CPython、IPython、Jython、PyPy**等。顾名思义，CPython 就是用 C 语言开发的了，是官方标准实现，拥有良好的生态，所以应用也就最为广泛了。而 IPython 是在 CPython 的基础之上在交互式方面得到增强的解释器。Jython 是专为 Java 平台设计的 Python 解释器，它把 Python 代码编译成 Java 字节码执行。PyPy 是 Python 语言（2.7.13和3.5.3）的一种快速、兼容的替代实现，以速度快著称。
 
 
 **字节码**是介于源代码和机器码之间的中间代码，由编译器将高级编程语言（如 Java、Python）的源代码编译生成，以字节（8 位）为基本单位的指令集。它不依赖具体硬件架构，需通过虚拟机（VM）解释或编译为机器码后执行。
@@ -527,7 +523,7 @@ def online_augment_generator(base_samples):
 
 这让模型每个 epoch 看到不同增强版本，提升泛化。PyTorch DataLoader + num_workers 就是在后台多进程运行这样的生成器。
 
-**💡 为什么生成器是 AI 数据处理的核心**
+**为什么生成器是 AI 数据处理的核心**
 
 现代框架（PyTorch、TensorFlow）的数据加载机制都围绕生成器设计：
 1. **内存效率**：无需一次性加载
@@ -535,7 +531,7 @@ def online_augment_generator(base_samples):
 3. **灵活性**：支持动态增强、采样、在线学习
 4. **可扩展**：处理 TB 级数据集
 
-**💡 对 AI 的重要性**：
+**对 AI 的重要性**：
 
 大型数据集 & 数据流处理的核心技能。例如在图像分类中：
 
@@ -561,9 +557,9 @@ class CustomImageDataset(data.Dataset):
         return image, self.labels[idx]
 ```
 
----
 
-## 3. 装饰器：函数的增强工厂
+
+## 3. 装饰器：函数的增强
 
 装饰器是 Python 最强大的特性之一，但也是最容易被误用的。在 AI 工程中，装饰器用于记录训练日志、自动重试、性能监控等。掌握它，能让你的代码更简洁、可维护。
 
