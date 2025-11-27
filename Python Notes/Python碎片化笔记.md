@@ -276,3 +276,26 @@ networkx 是一个用于创建、操作和研究复杂网络结构的 Python 库
 
 
 
+ 
+
+## re库
+这个re库是 Python 自带的正则表达式模块，专门用来处理字符串的模式匹配、替换、提取等操作。
+
+```python
+import re
+# 移除HTML标签示例
+text = "<p>这是一段<b>HTML</b>文本</p>"
+clean_text = re.sub(r'<[^>]+>', '', text)
+print(clean_text)  # 输出: 这是一段HTML文本
+```
+
+比如你这段代码里的re.sub()，就是借助正则表达式规则，把文本里的 HTML 标签（像`<p>`、`<b>`这类）替换成空字符串，从而实现 “移除 HTML 标签” 的效果。
+
+
+
+
+## NLTK库
+
+
+
+
