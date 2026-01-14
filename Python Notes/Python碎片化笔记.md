@@ -298,4 +298,21 @@ print(clean_text)  # 输出: 这是一段HTML文本
 
 
 
+## wget库
+wget 是一个用于从网络上下载文件的 Python 库。它提供了简单易用的接口，可以方便地从指定的 URL 下载文件并保存到本地。
+
+
+
+以下是一个简单的文件下载示例：
+```python
+import wget
+ 
+url = 'https://example.com/file.txt'
+filename = wget.download(url)
+print(f'\n文件 {filename} 下载完成')
+```
+在上述代码中，wget.download(url) 函数会从指定的 URL 下载文件，并将文件保存到当前工作目录下，返回下载后的文件名。
+
+
+## 
 
